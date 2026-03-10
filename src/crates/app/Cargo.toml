@@ -1,0 +1,60 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[package.metadata.docs.rs]
+all-features = true
+targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
+
+[dependencies]
+egui = { workspace = true }
+eframe = { workspace = true }
+egui_dock = { version = "0.17.0", features = ["serde"] }
+log = "0.4.27"
+serde = { workspace = true }
+chrono = { workspace = true }
+strum = { workspace = true }
+egui_logger = { git = "https://github.com/Omustardo/egui_logger.git" }
+rand = { workspace = true }
+uuid = { workspace = true }
+strum_macros = { workspace = true }
+ron = { workspace = true }
+enum-map = { workspace = true }
+bitflags = { workspace = true }
+egui_ltreeview = { workspace = true }
+bincode = { workspace = true }
+base64 = { workspace = true }
+
+#== Native dependencies ==#
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+getrandom = { version = "0.3" }
+open = "5.3.2"
+fs2 = "0.4.3"
+clap = { version = "4.0", features = ["derive"] }
+
+#== Web dependencies ==#
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures = "0.4.50"
+wasm-bindgen = "0.2"
+# to access the DOM (to hide the loading text and to export saves on web)
+web-sys = { version = "0.3.70", features = [
+    "Blob",
+    "Document",
+    "Element",
+    "HtmlAnchorElement",
+    "Url",
+    "Window",
+] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
+[lints]
+workspace = true
+
+#[[example]]
+# Standalone demos that each require only a single file don't need to be listed.
+# Run them with: `cargo run --example <target>`
+# where the target is the name of the Rust file in examples/
+# For example:
+# `cargo run --example drag_and_drop`

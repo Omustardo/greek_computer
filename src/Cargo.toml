@@ -1,0 +1,116 @@
+[workspace]
+# The algorithm for how "features" parameters are resolved. 3 is the most recent one as of 2025-09.
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.dependencies] # Shared dependencies across all crates
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+# WARNING: Updating this is unlikely to be a drop-in replacement. Even if you make it compile, unless everything is
+# very well tested, behavior will probably break. The new syntax won't work well with LLMs. All dependencies that use
+# egui must also support the new version. I recommend not updating this unless it's really necessary.
+#
+# If you do update, make sure to follow the migration guide in release notes like https://github.com/emilk/egui/releases/tag/0.32.0
+# And test the UI as much as possible for anything that might have silently broken.
+egui = { version = "0.32", features = [
+    "color-hex",
+    "persistence",
+    # Detect deadlocks (double-locking on the same thread). Only needed for debugging app freezes. Only affects epaint::mutex::RwLock (which egui uses a lot).
+    # "deadlock_detection",
+    # Makes egui log some errors using the log crate. Only needed for debugging.
+    # "log"
+] }
+eframe = { version = "0.32", default-features = false, features = [
+    # "accesskit", # Make egui compatible with screen readers on Desktop. NOTE: adds a lot of dependencies.
+    # "web_screen_reader", # Enable screen reader support on web. Requires: ctx.options_mut(|o| o.screen_reader = true);
+    "default_fonts", # Embed the default egui fonts.
+    "glow", # Use the glow rendering backend. Alternative: "wgpu".
+    "persistence", # Enable restoring app state when restarting the app.
+    "wayland", # To support Linux (and CI)
+    "x11", # To support older Linux distributions (restores one of the default features)
+    # "callstack", # "Show a debug-ui on hover including the stacktrace to the hovered item."
+] }
+uuid = { version = "1.0", features = ["v4", "serde", "js"] }
+bitflags = { version = "2.9.1", features = ["serde"] }
+strum = "0.27.1"
+strum_macros = "0.27.1"
+ron = "0.10"
+enum-map = { version = "2.7", features = ["serde"] }
+egui_ltreeview = { version = "0.5.3", features = ["persistence", "doc"] }
+rand = "0.9.2"
+bincode = { version = "2.0.1", features = ["serde"] }
+base64 = "0.22.1"
+
+# More info about binary size reduction at: https://github.com/johnthagen/min-sized-rust
+# and profile.release options at: https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles
+[profile.release]
+# Increased compilation time for smaller binary.
+# Figuring out which is best requires testing.
+# https://doc.rust-lang.org/cargo/reference/profiles.html#opt-level
+opt-level = 2
+# strip debug symbols from the binary to reduce its size. Turning this on breaks things like stack traces.
+# As of 2025-09, enabling this caused a compilation failure, but may be worth investigating further.
+# https://doc.rust-lang.org/cargo/reference/profiles.html#strip
+strip = false
+# Remove dead code, at the cost of slightly slower compilation.
+# As of 2025-09, "fat" reduced the binary size from 16 to 13MB, but increased from 6 to 7MB for wasm
+# while "thin" increased both binary sizes! (18MB and 7MB respectively). Conditional compilation is not easily
+# supported for `profile.release` for wasm vs desktop, so keep this disabled.
+# https://doc.rust-lang.org/cargo/reference/profiles.html#lto
+lto = false
+
+[workspace.lints.rust]
+rust_2018_idioms = "warn"
+
+# Configuration for `cargo clippy`
+# https://doc.rust-lang.org/nightly/cargo/reference/manifest.html#the-lints-section
+# "all" should handle all of the other cases, but I didn't find documentation for which ones it covers, so I explicitly
+# left the others included. This makes it easy if I want to adjust the levels later.
+#
+# The first set of checks at `level = "deny"` are meant to enable broad swathes of checks.
+# To manage these more specifically, I "allow" various checks. These allows must be explicitly given priority over
+# the "deny" configuration that includes the same checks. For example, `collapsible_if` is probably part of `style`.
+# So if `style` has "deny" at P1, then we need to override it "allow" at a higher priority with:
+#  `collapsible_if = { level = "allow", priority = 100 }`
+[workspace.lints.clippy]
+all = { level = "deny", priority = 0 }
+suspicious = { level = "deny", priority = 1 }
+complexity = { level = "deny", priority = 1 }
+perf = { level = "deny", priority = 1 }
+style = { level = "deny", priority = 1 }
+panic = { level = "deny", priority = 1 }
+correctness = { level = "deny", priority = 1 }
+
+# Low priority, but enabling these checks may have value.
+#nursery = { level = "deny", priority = 1 }
+#pedantic = { level = "deny", priority = 1 }
+
+# These 'pendantic' checks have low impact, but they have safe automatic fixes. Run `make tidy` to resolve all of them.
+cast_lossless = { level = "deny", priority = 100 }
+must_use_candidate = { level = "deny", priority = 100 }
+return_self_not_must_use = { level = "deny", priority = 100 }
+uninlined_format_args = { level = "deny", priority = 100 }
+semicolon_if_nothing_returned = { level = "deny", priority = 100 }
+
+# Temporarily disable some 'pedantic' checks. These could hide real issues and should be resolved, but are probably not actually problematic.
+float_cmp = { level = "allow", priority = 100 }
+unsafe_derive_deserialize = { level = "allow", priority = 100 }
+cast_precision_loss = { level = "allow", priority = 100 }
+cast_possible_truncation = { level = "allow", priority = 100 }
+cast_sign_loss = { level = "allow", priority = 100 }
+implicit_hasher = { level = "allow", priority = 100 }
+
+# Disable some pedantic checks. These could be re-enabled, but are low priority.
+doc_markdown = { level = "allow", priority = 100 }
+missing_errors_doc = { level = "allow", priority = 100 }
+missing_panics_doc = { level = "allow", priority = 100 }
+too_many_lines = { level = "allow", priority = 100 }
+unused_self = { level = "allow", priority = 100 }
+format_push_string = { level = "allow", priority = 100 }
+trivially_copy_pass_by_ref = { level = "allow", priority = 100 }
+
+# Disable checks that aren't worth dealing with.
+collapsible_if = { level = "allow", priority = 100 }
+too_many_arguments = { level = "allow", priority = 100 }
+needless_range_loop = { level = "allow", priority = 100 }
+manual_let_else = { level = "allow", priority = 100 }
