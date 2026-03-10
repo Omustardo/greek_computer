@@ -5,58 +5,60 @@ use egui::{Color32, Grid, RichText, ScrollArea, Ui, Vec2};
 
 impl MyAppState {
     pub(crate) fn show_center_panel(&mut self, ui: &mut Ui) {
-        ui.label("Rotate layers to make every column sum to 42.");
-        ui.add_space(10.0);
+        ui.vertical_centered(|ui| {
+            ui.label("Rotate layers to make every column sum to 42.");
+            ui.add_space(10.0);
 
-        // 1. Calculate the combined state and column sums
-        let (combined_grid, column_sums) = self.calculate_totals();
+            // 1. Calculate the combined state and column sums
+            let (combined_grid, column_sums) = self.calculate_totals();
 
-        // 2. Display the Combined Result (The "Stack")
-        ui.group(|ui| {
-            ui.heading("Combined View (Sum of all Layers)");
-            ui.add_space(5.0);
-            Self::draw_grid(ui, &combined_grid, Some(&column_sums));
-        });
-
-        ui.add_space(10.0);
-        ui.separator();
-        ui.add_space(10.0);
-
-        // 3. Display Individual Layers with Controls
-        let mut pending_action = None;
-
-        ScrollArea::vertical().show(ui, |ui| {
-            // Using `enumerate()` is now possible because we defer mutation to the end
-            for (i, layer) in self.state.layers.iter().enumerate() {
-                ui.push_id(i, |ui| {
-                    ui.group(|ui| {
-                        ui.horizontal(|ui| {
-                            ui.label(RichText::new(format!("Layer {}", i + 1)).strong());
-                            ui.add_space(10.0);
-
-                            // The default left-to-right flow prevents the group box
-                            // from needlessly expanding to fill the parent width.
-                            if ui.button("⏴ Rotate Left").clicked() {
-                                pending_action = Some((i, -1));
-                            }
-                            if ui.button("Rotate Right ⏵").clicked() {
-                                pending_action = Some((i, 1));
-                            }
-                        });
-
-                        ui.add_space(5.0);
-                        // Draw the individual layer
-                        Self::draw_grid(ui, &layer.values, None);
-                    });
-                });
+            // 2. Display the Combined Result (The "Stack")
+            ui.group(|ui| {
+                ui.heading("Combined View (Sum of all Layers)");
                 ui.add_space(5.0);
+                Self::draw_grid(ui, &combined_grid, Some(&column_sums));
+            });
+
+            ui.add_space(10.0);
+            ui.separator();
+            ui.add_space(10.0);
+
+            // 3. Display Individual Layers with Controls
+            let mut pending_action = None;
+
+            ScrollArea::vertical().show(ui, |ui| {
+                // Using `enumerate()` is now possible because we defer mutation to the end
+                for (i, layer) in self.state.layers.iter().enumerate() {
+                    ui.push_id(i, |ui| {
+                        ui.group(|ui| {
+                            ui.horizontal(|ui| {
+                                ui.label(RichText::new(format!("Layer {}", i + 1)).strong());
+                                ui.add_space(10.0);
+
+                                // The default left-to-right flow prevents the group box
+                                // from needlessly expanding to fill the parent width.
+                                if ui.button("⏴ Rotate Left").clicked() {
+                                    pending_action = Some((i, -1));
+                                }
+                                if ui.button("Rotate Right ⏵").clicked() {
+                                    pending_action = Some((i, 1));
+                                }
+                            });
+
+                            ui.add_space(5.0);
+                            // Draw the individual layer
+                            Self::draw_grid(ui, &layer.values, None);
+                        });
+                    });
+                    ui.add_space(5.0);
+                }
+            });
+
+            // Apply rotation after rendering if a button was clicked
+            if let Some((layer_idx, dir)) = pending_action {
+                self.rotate_layer(layer_idx, dir);
             }
         });
-
-        // Apply rotation after rendering if a button was clicked
-        if let Some((layer_idx, dir)) = pending_action {
-            self.rotate_layer(layer_idx, dir);
-        }
     }
 
     /// Helper to calculate the flat grid sum and the column totals
