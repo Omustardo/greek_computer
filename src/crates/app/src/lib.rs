@@ -4,6 +4,7 @@ pub mod menus;
 pub mod tabs;
 pub mod misc;
 mod tick;
+pub mod solver;
 
 pub use app::MyApp;
 pub use app::MyAppState;
