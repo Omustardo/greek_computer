@@ -26,7 +26,11 @@ pub fn solve(layers: &[Layer], target_sum: i32) -> Option<Solution> {
 
     // Validate that all layers have the same dimensions
     for layer in layers {
-        assert_eq!(layer.values.len(), num_rows, "All layers must have the same number of rows");
+        assert_eq!(
+            layer.values.len(),
+            num_rows,
+            "All layers must have the same number of rows"
+        );
         for row in &layer.values {
             assert_eq!(row.len(), num_cols, "All rows must have the same number of columns");
         }

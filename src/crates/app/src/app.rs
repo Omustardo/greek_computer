@@ -1,8 +1,8 @@
-
 use crate::log_categories::LogCategory;
 use crate::menus::settings_menu::dock_settings::DockSettings;
 use crate::menus::settings_menu::layout_menu::DockSettingsSessionState;
 use crate::menus::settings_menu::layout_menu::SavedLayout;
+use crate::misc::fps_counter::FpsCounter;
 use crate::tabs::{LayoutPresetName, MyAppTabViewer, TabName, get_closed_tabs};
 use chrono;
 use chrono::{Duration, TimeDelta};
@@ -11,7 +11,6 @@ use egui_dock::{DockState, OverlayType};
 use egui_logger::{EguiLogger, TimeFormat, TimePrecision};
 use std::collections::HashMap;
 use std::ops::Div;
-use crate::misc::fps_counter::FpsCounter;
 
 /// MyApp exists for clean program structure. Putting dock_state within MyAppState
 /// doesn't work due to a borrow reference when using egui_dock. In order to render a UI
@@ -86,7 +85,6 @@ pub struct SessionState {
     /// savefile were somehow corrupted.
     pub latest_backup_tick: u128,
 
-
     pub save: SavingState,
 
     // Generation configuration
@@ -94,7 +92,6 @@ pub struct SessionState {
     pub gen_num_rows: usize,
     pub gen_num_cols: usize,
     pub gen_target_sum: i32,
-
 }
 
 /// Variables related to saving the game.
@@ -145,7 +142,7 @@ const NUM_COLS: usize = 12;
 
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
 pub struct Layer {
-    pub values: Vec<Vec<Option<i16>>>
+    pub values: Vec<Vec<Option<i16>>>,
 }
 impl Layer {
     pub fn new(values: Vec<Vec<Option<i16>>>) -> Layer {
@@ -159,7 +156,8 @@ impl Layer {
 
         for row in 0..num_rows {
             for col in 0..num_cols {
-                let token = tokens.next()
+                let token = tokens
+                    .next()
                     .expect("Input text does not contain enough tokens to fill the layer");
 
                 values[row][col] = match token {
@@ -173,36 +171,52 @@ impl Layer {
     }
     pub fn default_layers() -> Vec<Layer> {
         vec![
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+            Layer::new_from_text(
+                NUM_ROWS,
+                NUM_COLS,
+                "
 __ __ __ __ __ __ __ __ __ __ __ __
 __ __ __ __ __ __ __ __ __ __ __ __
 __ __ __ __ __ __ __ __ __ __ __ __
-10 __ 07 __ 15 __ 08 __ 03 __ 06 __"),
-
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+10 __ 07 __ 15 __ 08 __ 03 __ 06 __",
+            ),
+            Layer::new_from_text(
+                NUM_ROWS,
+                NUM_COLS,
+                "
 __ __ __ __ __ __ __ __ __ __ __ __
 __ __ __ __ __ __ __ __ __ __ __ __
 __ 14 __ 09 __ 12 __ 04 __ 07 15 __
-11 11 06 11 __ 06 17 07 03 __ 06 __"),
-
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+11 11 06 11 __ 06 17 07 03 __ 06 __",
+            ),
+            Layer::new_from_text(
+                NUM_ROWS,
+                NUM_COLS,
+                "
 __ __ __ __ __ __ __ __ __ __ __ __
 __ 09 __ 05 __ 10 __ 08 __ 22 __ 16
 01 12 __ 21 06 15 04 09 18 11 26 14
-__ 07 08 09 13 09 07 13 21 17 04 05"),
-
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+__ 07 08 09 13 09 07 13 21 17 04 05",
+            ),
+            Layer::new_from_text(
+                NUM_ROWS,
+                NUM_COLS,
+                "
 12 __ 06 __ 10 __ 10 __ 01 __ 09 __
 02 13 09 __ 17 19 03 12 03 26 06 __
 06 __ 14 12 03 08 09 __ 09 20 12 03
-07 14 11 __ 08 __ 16 02 07 __ 09 __"),
-
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+07 14 11 __ 08 __ 16 02 07 __ 09 __",
+            ),
+            Layer::new_from_text(
+                NUM_ROWS,
+                NUM_COLS,
+                "
 08 03 04 12 02 05 10 07 16 08 07 08
 04 04 06 06 03 03 14 14 21 21 09 09
 04 05 06 07 08 09 10 11 12 13 14 15
-11 11 14 11 14 11 14 14 11 14 11 14")
-            ]
+11 11 14 11 14 11 14 14 11 14 11 14",
+            ),
+        ]
     }
 }
 

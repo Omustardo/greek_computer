@@ -1,13 +1,15 @@
 // panel.rs
 
-use crate::{MyAppState};
+use crate::MyAppState;
 use egui::{Color32, Grid, RichText, ScrollArea, Ui, Vec2};
 
 impl MyAppState {
     pub(crate) fn show_center_panel(&mut self, ui: &mut Ui) {
-        ui.label(format!("Rotate layers to make every column sum to {}.", self.state.target_sum));
+        ui.label(format!(
+            "Rotate layers to make every column sum to {}.",
+            self.state.target_sum
+        ));
         ui.add_space(10.0);
-
 
         ui.group(|ui| {
             ui.heading("Generate New Puzzle");
@@ -98,7 +100,11 @@ impl MyAppState {
     /// Helper to calculate the flat grid sum and the column totals
     fn calculate_totals(&self) -> (Vec<Vec<Option<i16>>>, Vec<i32>) {
         let num_rows = self.state.layers.first().map_or(0, |l| l.values.len());
-        let num_cols = self.state.layers.first().map_or(0, |l| l.values.first().map_or(0, |r| r.len()));
+        let num_cols = self
+            .state
+            .layers
+            .first()
+            .map_or(0, |l| l.values.first().map_or(0, |r| r.len()));
 
         let mut combined = vec![vec![None; num_cols]; num_rows];
         let mut col_sums = vec![0; num_cols];
@@ -106,10 +112,8 @@ impl MyAppState {
         for layer in &self.state.layers {
             // Using `zip` guarantees we automatically limit bounds iteration without manual checks
             for (combined_row, layer_row) in combined.iter_mut().zip(&layer.values) {
-                for ((combined_val, col_sum), &layer_val) in combined_row
-                    .iter_mut()
-                    .zip(col_sums.iter_mut())
-                    .zip(layer_row)
+                for ((combined_val, col_sum), &layer_val) in
+                    combined_row.iter_mut().zip(col_sums.iter_mut()).zip(layer_row)
                 {
                     // If we encounter a number on this layer, check if we've already
                     // seen a number in a higher layer (is_none).
@@ -170,12 +174,7 @@ impl MyAppState {
                         let is_target = sum == target_sum;
                         let color = if is_target { Color32::GREEN } else { Color32::RED };
 
-                        ui.label(
-                            RichText::new(sum.to_string())
-                                .strong()
-                                .size(16.0)
-                                .color(color),
-                        );
+                        ui.label(RichText::new(sum.to_string()).strong().size(16.0).color(color));
                     }
                     ui.end_row();
                 }

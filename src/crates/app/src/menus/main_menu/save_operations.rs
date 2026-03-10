@@ -525,7 +525,10 @@ mod integration_tests {
             target_app = imported_app;
         }
 
-        assert_eq!(original_app.state.tick.ticks_processed_total, target_app.state.tick.ticks_processed_total);
+        assert_eq!(
+            original_app.state.tick.ticks_processed_total,
+            target_app.state.tick.ticks_processed_total
+        );
     }
 
     #[test]

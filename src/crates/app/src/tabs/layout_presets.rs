@@ -1,5 +1,5 @@
 use crate::tabs::TabName;
-use egui_dock::{DockState};
+use egui_dock::DockState;
 use strum_macros::{Display, EnumIter};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, EnumIter, Display)]
@@ -19,7 +19,6 @@ impl LayoutPresetName {
 fn only_center() -> DockState<TabName> {
     DockState::new(vec![TabName::CenterPanel])
 }
-
 
 // fn initial_attempt() -> DockState<TabName> {
 //     use TabName::{LeftPanel, CenterPanel};

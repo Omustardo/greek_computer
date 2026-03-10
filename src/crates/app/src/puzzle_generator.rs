@@ -1,26 +1,14 @@
 use crate::Layer;
+use rand::Rng;
 use rand::seq::IndexedRandom;
 use rand::seq::SliceRandom;
-use rand::Rng;
 
-pub fn generate_puzzle(
-    num_layers: usize,
-    num_rows: usize,
-    num_cols: usize,
-    target_sum: i32,
-) -> Vec<Layer> {
+pub fn generate_puzzle(num_layers: usize, num_rows: usize, num_cols: usize, target_sum: i32) -> Vec<Layer> {
     if num_layers == 0 || num_rows == 0 || num_cols == 0 {
         return vec![];
     }
 
     let mut rng = rand::rng();
-
-    // We want to generate a puzzle that has exactly 1 solution if possible.
-    // We'll generate a few and pick the one with the fewest solutions.
-    // However, `solve` currently just returns `Option<Solution>`. We might need to
-    // just generate one and hope for the best, or we can copy/modify the solver
-    // to count solutions if unique solution is strictly required. For now, we just
-    // generate one good puzzle.
 
     // Step 1: Create a valid solved grid.
     // Each column must sum to `target_sum`.
@@ -60,8 +48,6 @@ pub fn generate_puzzle(
 
     for l in (0..num_layers - 1).rev() {
         // We want to remove a fraction of the current cells.
-        // Let's say we want the sizes of sets to grow roughly linearly or exponentially.
-        // Actually, just randomly removing a bunch of removable cells is fine.
         let target_size = (num_rows * num_cols) * (l + 1) / num_layers;
         let mut current_size = current_set.iter().flat_map(|r| r.iter()).filter(|&&b| b).count();
 
@@ -98,8 +84,6 @@ pub fn generate_puzzle(
                 if vis < l {
                     // This cell is hidden by an upper layer.
                     // To ensure connectivity, we fill it with a decoy number,
-                    // but ONLY if the cell is in S_l. Wait, if it's in S_l, it has vis <= l.
-                    // If vis < l, it is in S_l, so we MUST fill it.
                     values[r][c] = Some(rng.random_range(0..=target_sum) as i16);
                 } else if vis == l {
                     // This cell is visible on this layer.
@@ -187,8 +171,12 @@ fn is_connected(grid: &[Vec<bool>], expected_count: usize) -> bool {
 
     while let Some((r, c)) = stack.pop() {
         let mut neighbors = vec![];
-        if r > 0 { neighbors.push((r - 1, c)); }
-        if r < num_rows - 1 { neighbors.push((r + 1, c)); }
+        if r > 0 {
+            neighbors.push((r - 1, c));
+        }
+        if r < num_rows - 1 {
+            neighbors.push((r + 1, c));
+        }
         neighbors.push((r, (c + num_cols - 1) % num_cols));
         neighbors.push((r, (c + 1) % num_cols));
 

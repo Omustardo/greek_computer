@@ -20,7 +20,8 @@ impl MyAppState {
         });
         ui.separator();
         ui.horizontal(|ui| {
-            ui.checkbox(&mut self.tick.ticks_active, "Enable Ticks").on_hover_text("Uncheck this to stop updates to the state of the application");
+            ui.checkbox(&mut self.tick.ticks_active, "Enable Ticks")
+                .on_hover_text("Uncheck this to stop updates to the state of the application");
         });
 
         ui.separator();
