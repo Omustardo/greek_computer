@@ -61,7 +61,7 @@ pub struct UiState {
 
 /// A grab bag of variables that don't need to be saved between sessions. A session refers to running the game binary.
 /// This is a lot of temporary UI state that is only used in a single UI.
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct SessionState {
     /// Whether to show the window for importing save data.
     pub show_import_dialog: bool,
@@ -87,6 +87,33 @@ pub struct SessionState {
     pub latest_backup_tick: u128,
 
     pub save: SavingState,
+
+    pub new_puzzle_target_sum: i32,
+    pub new_puzzle_num_rows: usize,
+    pub new_puzzle_num_cols: usize,
+    pub new_puzzle_num_layers: usize,
+}
+
+impl Default for SessionState {
+    fn default() -> Self {
+        Self {
+            show_import_dialog: false,
+            focus_import_dialog: false,
+            import_text_buffer: String::new(),
+            #[cfg(debug_assertions)]
+            show_clear_confirmation: false,
+            license_search_query: String::new(),
+            fps_counter: FpsCounter::default(),
+            dock: DockSettingsSessionState::default(),
+            latest_backup_tick: 0,
+            save: SavingState::default(),
+
+            new_puzzle_target_sum: 42,
+            new_puzzle_num_rows: 4,
+            new_puzzle_num_cols: 12,
+            new_puzzle_num_layers: 5,
+        }
+    }
 }
 
 /// Variables related to saving the game.
@@ -132,9 +159,6 @@ impl TickState {
     }
 }
 
-const NUM_ROWS: usize = 4;
-const NUM_COLS: usize = 12;
-
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
 pub struct Layer {
     pub values: Vec<Vec<Option<i16>>>
@@ -165,31 +189,31 @@ impl Layer {
     }
     pub fn default_layers() -> Vec<Layer> {
         vec![
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+            Layer::new_from_text(4, 12, "
 __ __ __ __ __ __ __ __ __ __ __ __
 __ __ __ __ __ __ __ __ __ __ __ __
 __ __ __ __ __ __ __ __ __ __ __ __
 10 __ 07 __ 15 __ 08 __ 03 __ 06 __"),
 
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+            Layer::new_from_text(4, 12, "
 __ __ __ __ __ __ __ __ __ __ __ __
 __ __ __ __ __ __ __ __ __ __ __ __
 __ 14 __ 09 __ 12 __ 04 __ 07 15 __
 11 11 06 11 __ 06 17 07 03 __ 06 __"),
 
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+            Layer::new_from_text(4, 12, "
 __ __ __ __ __ __ __ __ __ __ __ __
 __ 09 __ 05 __ 10 __ 08 __ 22 __ 16
 01 12 __ 21 06 15 04 09 18 11 26 14
 __ 07 08 09 13 09 07 13 21 17 04 05"),
 
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+            Layer::new_from_text(4, 12, "
 12 __ 06 __ 10 __ 10 __ 01 __ 09 __
 02 13 09 __ 17 19 03 12 03 26 06 __
 06 __ 14 12 03 08 09 __ 09 20 12 03
 07 14 11 __ 08 __ 16 02 07 __ 09 __"),
 
-            Layer::new_from_text(NUM_ROWS, NUM_COLS, "
+            Layer::new_from_text(4, 12, "
 08 03 04 12 02 05 10 07 16 08 07 08
 04 04 06 06 03 03 14 14 21 21 09 09
 04 05 06 07 08 09 10 11 12 13 14 15
@@ -200,12 +224,20 @@ __ 07 08 09 13 09 07 13 21 17 04 05"),
 
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
 pub struct GameState {
-    pub layers: Vec<Layer>
+    pub layers: Vec<Layer>,
+    pub target_sum: i32,
+    pub num_rows: usize,
+    pub num_cols: usize,
+    pub num_layers: usize,
 }
 impl Default for GameState {
     fn default() -> Self {
         Self {
-            layers: Layer::default_layers()
+            layers: Layer::default_layers(),
+            target_sum: 42,
+            num_rows: 4,
+            num_cols: 12,
+            num_layers: 5,
         }
     }
 }

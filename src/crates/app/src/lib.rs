@@ -5,6 +5,7 @@ pub mod tabs;
 pub mod misc;
 mod tick;
 pub mod solver;
+pub mod puzzle_generator;
 
 pub use app::MyApp;
 pub use app::MyAppState;

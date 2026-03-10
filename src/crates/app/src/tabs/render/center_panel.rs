@@ -5,7 +5,42 @@ use egui::{Color32, Grid, RichText, ScrollArea, Ui, Vec2};
 
 impl MyAppState {
     pub(crate) fn show_center_panel(&mut self, ui: &mut Ui) {
-        ui.label("Rotate layers to make every column sum to 42.");
+        let target_sum = self.state.target_sum;
+
+        ui.group(|ui| {
+            ui.heading("New Puzzle Settings");
+            ui.horizontal(|ui| {
+                ui.label("Target Sum:");
+                ui.add(egui::DragValue::new(&mut self.session.new_puzzle_target_sum).speed(1));
+
+                ui.label("Rows:");
+                ui.add(egui::DragValue::new(&mut self.session.new_puzzle_num_rows).speed(0.1).range(1..=10));
+
+                ui.label("Cols:");
+                ui.add(egui::DragValue::new(&mut self.session.new_puzzle_num_cols).speed(0.1).range(1..=20));
+
+                ui.label("Layers:");
+                ui.add(egui::DragValue::new(&mut self.session.new_puzzle_num_layers).speed(0.1).range(1..=10));
+
+                if ui.button("Generate").clicked() {
+                    let ts = self.session.new_puzzle_target_sum;
+                    let nr = self.session.new_puzzle_num_rows;
+                    let nc = self.session.new_puzzle_num_cols;
+                    let nl = self.session.new_puzzle_num_layers;
+                    if let Some(layers) = crate::puzzle_generator::generate_puzzle(nr, nc, nl, ts) {
+                        self.state.layers = layers;
+                        self.state.target_sum = ts;
+                        self.state.num_rows = nr;
+                        self.state.num_cols = nc;
+                        self.state.num_layers = nl;
+                    }
+                }
+            });
+        });
+
+        ui.add_space(10.0);
+
+        ui.label(format!("Rotate layers to make every column sum to {}.", target_sum));
         ui.add_space(10.0);
 
         // 1. Calculate the combined state and column sums
@@ -15,7 +50,7 @@ impl MyAppState {
         ui.group(|ui| {
             ui.heading("Combined View (Sum of all Layers)");
             ui.add_space(5.0);
-            Self::draw_grid(ui, &combined_grid, Some(&column_sums));
+            Self::draw_grid(ui, &combined_grid, Some(&column_sums), target_sum);
         });
 
         ui.add_space(10.0);
@@ -46,7 +81,7 @@ impl MyAppState {
 
                         ui.add_space(5.0);
                         // Draw the individual layer
-                        Self::draw_grid(ui, &layer.values, None);
+                        Self::draw_grid(ui, &layer.values, None, target_sum);
                     });
                 });
                 ui.add_space(5.0);
@@ -61,8 +96,8 @@ impl MyAppState {
 
     /// Helper to calculate the flat grid sum and the column totals
     fn calculate_totals(&self) -> (Vec<Vec<Option<i16>>>, Vec<i32>) {
-        let num_rows = 4;
-        let num_cols = 12;
+        let num_rows = self.state.num_rows;
+        let num_cols = self.state.num_cols;
 
         let mut combined = vec![vec![None; num_cols]; num_rows];
         let mut col_sums = vec![0; num_cols];
@@ -104,9 +139,9 @@ impl MyAppState {
         }
     }
 
-    /// Renders a 4x12 grid of numbers.
-    /// If `col_sums` is provided, it adds a footer row validating the totals against 42.
-    fn draw_grid(ui: &mut Ui, grid_data: &[Vec<Option<i16>>], col_sums: Option<&[i32]>) {
+    /// Renders a grid of numbers.
+    /// If `col_sums` is provided, it adds a footer row validating the totals against the target sum.
+    fn draw_grid(ui: &mut Ui, grid_data: &[Vec<Option<i16>>], col_sums: Option<&[i32]>, target_sum: i32) {
         Grid::new("puzzle_grid")
             .striped(true)
             .min_col_width(25.0)
@@ -131,7 +166,7 @@ impl MyAppState {
                 // Optional: Draw Column Sums (The Solution Check)
                 if let Some(sums) = col_sums {
                     for &sum in sums {
-                        let is_target = sum == 42;
+                        let is_target = sum == target_sum;
                         let color = if is_target { Color32::GREEN } else { Color32::RED };
 
                         ui.label(
