@@ -11,6 +11,21 @@ impl MyAppState {
         self.show_dock_settings(ui);
         self.show_controls_menu(ui);
 
+        if ui.button("Solve").clicked() {
+            if let Some(solution) = crate::solver::solve(&self.state.layers, 42) {
+                for (i, &shift) in solution.iter().enumerate() {
+                    if let Some(layer) = self.state.layers.get_mut(i) {
+                        for row in &mut layer.values {
+                            let len = row.len();
+                            if len > 0 {
+                                row.rotate_right(shift % len);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         commands
     }
     fn show_graphics_settings(&mut self, ctx: &egui::Context, ui: &mut Ui) {
