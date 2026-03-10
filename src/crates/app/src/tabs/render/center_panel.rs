@@ -5,7 +5,43 @@ use egui::{Color32, Grid, RichText, ScrollArea, Ui, Vec2};
 
 impl MyAppState {
     pub(crate) fn show_center_panel(&mut self, ui: &mut Ui) {
-        ui.label("Rotate layers to make every column sum to 42.");
+        ui.label(format!("Rotate layers to make every column sum to {}.", self.state.target_sum));
+        ui.add_space(10.0);
+
+
+        ui.group(|ui| {
+            ui.heading("Generate New Puzzle");
+            ui.add_space(5.0);
+            ui.horizontal(|ui| {
+                ui.label("Layers:");
+                ui.add(egui::DragValue::new(&mut self.session.gen_num_layers).range(1..=10));
+                ui.add_space(10.0);
+
+                ui.label("Rows:");
+                ui.add(egui::DragValue::new(&mut self.session.gen_num_rows).range(1..=10));
+                ui.add_space(10.0);
+
+                ui.label("Columns:");
+                ui.add(egui::DragValue::new(&mut self.session.gen_num_cols).range(1..=20));
+                ui.add_space(10.0);
+
+                ui.label("Target Sum:");
+                ui.add(egui::DragValue::new(&mut self.session.gen_target_sum).range(1..=1000));
+            });
+            ui.add_space(5.0);
+            if ui.button("Generate!").clicked() {
+                self.state.layers = crate::puzzle_generator::generate_puzzle(
+                    self.session.gen_num_layers,
+                    self.session.gen_num_rows,
+                    self.session.gen_num_cols,
+                    self.session.gen_target_sum,
+                );
+                self.state.target_sum = self.session.gen_target_sum;
+            }
+        });
+
+        ui.add_space(10.0);
+        ui.separator();
         ui.add_space(10.0);
 
         // 1. Calculate the combined state and column sums
@@ -15,7 +51,7 @@ impl MyAppState {
         ui.group(|ui| {
             ui.heading("Combined View (Sum of all Layers)");
             ui.add_space(5.0);
-            Self::draw_grid(ui, &combined_grid, Some(&column_sums));
+            Self::draw_grid(ui, &combined_grid, Some(&column_sums), self.state.target_sum);
         });
 
         ui.add_space(10.0);
@@ -46,7 +82,7 @@ impl MyAppState {
 
                         ui.add_space(5.0);
                         // Draw the individual layer
-                        Self::draw_grid(ui, &layer.values, None);
+                        Self::draw_grid(ui, &layer.values, None, self.state.target_sum);
                     });
                 });
                 ui.add_space(5.0);
@@ -61,8 +97,8 @@ impl MyAppState {
 
     /// Helper to calculate the flat grid sum and the column totals
     fn calculate_totals(&self) -> (Vec<Vec<Option<i16>>>, Vec<i32>) {
-        let num_rows = 4;
-        let num_cols = 12;
+        let num_rows = self.state.layers.first().map_or(0, |l| l.values.len());
+        let num_cols = self.state.layers.first().map_or(0, |l| l.values.first().map_or(0, |r| r.len()));
 
         let mut combined = vec![vec![None; num_cols]; num_rows];
         let mut col_sums = vec![0; num_cols];
@@ -106,7 +142,7 @@ impl MyAppState {
 
     /// Renders a 4x12 grid of numbers.
     /// If `col_sums` is provided, it adds a footer row validating the totals against 42.
-    fn draw_grid(ui: &mut Ui, grid_data: &[Vec<Option<i16>>], col_sums: Option<&[i32]>) {
+    fn draw_grid(ui: &mut Ui, grid_data: &[Vec<Option<i16>>], col_sums: Option<&[i32]>, target_sum: i32) {
         Grid::new("puzzle_grid")
             .striped(true)
             .min_col_width(25.0)
@@ -131,7 +167,7 @@ impl MyAppState {
                 // Optional: Draw Column Sums (The Solution Check)
                 if let Some(sums) = col_sums {
                     for &sum in sums {
-                        let is_target = sum == 42;
+                        let is_target = sum == target_sum;
                         let color = if is_target { Color32::GREEN } else { Color32::RED };
 
                         ui.label(

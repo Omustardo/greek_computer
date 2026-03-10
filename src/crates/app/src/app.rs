@@ -86,7 +86,15 @@ pub struct SessionState {
     /// savefile were somehow corrupted.
     pub latest_backup_tick: u128,
 
+
     pub save: SavingState,
+
+    // Generation configuration
+    pub gen_num_layers: usize,
+    pub gen_num_rows: usize,
+    pub gen_num_cols: usize,
+    pub gen_target_sum: i32,
+
 }
 
 /// Variables related to saving the game.
@@ -200,12 +208,14 @@ __ 07 08 09 13 09 07 13 21 17 04 05"),
 
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
 pub struct GameState {
-    pub layers: Vec<Layer>
+    pub layers: Vec<Layer>,
+    pub target_sum: i32,
 }
 impl Default for GameState {
     fn default() -> Self {
         Self {
-            layers: Layer::default_layers()
+            layers: Layer::default_layers(),
+            target_sum: 42,
         }
     }
 }
@@ -256,6 +266,10 @@ impl Default for MyAppState {
             session: {
                 let mut sess = SessionState::default();
                 sess.save.latest_save_time = chrono::Local::now();
+                sess.gen_num_layers = 5;
+                sess.gen_num_rows = 4;
+                sess.gen_num_cols = 12;
+                sess.gen_target_sum = 42;
                 sess
             },
             logger,
